@@ -12,8 +12,7 @@ echo "Found ${num_assemblies} files to decompile."
 
 # Go through all files
 for assembly in $assemblies; do
-    folder_name=$(echo ${assembly} | tr -d "dll") &> /dev/null
-    folder_name=${folder_name::-1}
+    folder_name="${assembly%.dll}"
 
     echo -ne "Decompiling... [${i}/${num_assemblies}]\r"
 
