@@ -13,6 +13,7 @@ echo "Found ${num_assemblies} files to decompile."
 # Go through all files
 for assembly in $assemblies; do
     folder_name="${assembly%.dll}"
+    folder_name="${folder_name#Assembly-CSharp-}"
 
     echo -ne "Decompiling... [${i}/${num_assemblies}]\r"
 
