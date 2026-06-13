@@ -21,7 +21,6 @@ total=${#sorted_dirs[@]}
 for ((i=0; i<total-1; i++)); do
   old="${sorted_dirs[i]}"
   new="${sorted_dirs[i+1]}"
-  out="${old}_${new}.html"
   current=$((i+1))
 
   #echo "Comparing: '$old' to '$new' -> $out [$current/$total]"
@@ -32,7 +31,8 @@ for ((i=0; i<total-1; i++)); do
     --exclude-directory-metadata yes \
     --max-diff-block-lines 0 \
     --max-page-diff-block-lines 41943040 \
-    --html="$out" \
+    --html="${old}_${new}.html" \
+    --markdown="${old}_${new}.md" \
     "./$old" "./$new"
 done
 
