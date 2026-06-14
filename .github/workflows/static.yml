@@ -38,7 +38,7 @@ jobs:
       - name: Install ilspycmd
         run: |
           dotnet tool install --global ilspycmd
-          echo "::add-path::$HOME/.dotnet/tools"
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
       - name: Verify ilspycmd
         run: ilspycmd --version
