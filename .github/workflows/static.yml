@@ -1,0 +1,141 @@
+name: Build & Publish HTML Diffs to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+#concurrency:
+#  group: "pages"
+#  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install ilspycmd
+        run: |
+          dotnet tool install --global ilspycmd
+          echo "::add-path::$HOME/.dotnet/tools"
+
+      - name: Verify ilspycmd
+        run: ilspycmd --version
+
+      - name: Run decompiler
+        run: |
+          ./decompile_all.sh
+
+      - name: Run generator
+        run: |
+          ./generate-diffs.sh
+
+      - name: Prepare publish directory
+        run: |
+          PUBLISH_DIR=publish
+          mkdir -p "$PUBLISH_DIR"
+          # copy generated HTML files from repo root into publish dir
+          shopt -s nullglob
+          for f in ./*.html; do
+            name=$(basename "$f")
+            # skip any repo-root index.html if present (we'll create our own)
+            if [ "$name" = "index.html" ]; then continue; fi
+            cp "$f" "$PUBLISH_DIR/$name"
+          done
+
+      - name: Create index.html
+        run: |
+          PUBLISH_DIR=publish
+
+          # count DLLs in repo root
+          dll\_count=\$(shopt -s nullglob; files=(./*.dll); echo "\${#files[@]}")
+          diffs=\$(( dll\_count > 0 ? dll\_count - 1 : 0 ))
+
+          cat > "$PUBLISH_DIR/index.html" <<'HTML'
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="utf-8"/>
+              <title>Among Us Mono Assemblies</title>
+            </head>
+            <body>
+              <h1>Among Us Mono Assemblies</h1>
+              <a href="https://github.com/astra1dev/AmongUsMonoAssemblies">GitHub Repository</a><br>
+              <br>
+              <h2>Diffs</h2>
+              <p>
+                Current assemblies: \${dll\_count}<br>
+                Current diffs: \${diffs}<br>
+              </p>
+              <br>
+              <ul>
+          HTML
+
+          shopt -s nullglob
+          for f in "$PUBLISH_DIR"/*.html; do
+            name=$(basename "$f")
+            if [ "$name" = "index.html" ]; then continue; fi
+            bytes=\$(stat -c%s "\$f")
+            hr\_size=\$(numfmt --to=iec --format="%.1f" "\$bytes")
+            echo "                <li><a href=\"\$name\">\$name</a> — \$hr\_size</li>" >> "\$PUBLISH\_DIR/index.html"
+          done
+
+          cat >> "$PUBLISH_DIR/index.html" <<'HTML'
+              </ul>
+            </body>
+          </html>
+          <style>
+
+          /* Dark mode styles */
+          @media (prefers-color-scheme: dark) {
+            body {
+              background-color: #121212;
+              color: #e0e0e0;
+            }
+
+            a {
+              color: #3498DB;
+              text-decoration: none;
+            }
+
+            /* "Animation" when hovering over links */
+            a:hover {
+              text-decoration: underline;
+            }
+          }
+
+          </style>
+          HTML
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: publish
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
