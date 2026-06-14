@@ -49,7 +49,7 @@ jobs:
 
       - name: Run generator
         run: |
-          ./generate-diffs.sh
+          ./generate_diffs.sh
 
       - name: Prepare publish directory
         run: |
