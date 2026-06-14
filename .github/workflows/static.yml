@@ -68,7 +68,7 @@ jobs:
           for f in ./*.html; do
             name=$(basename "$f")
             # skip any repo-root index.html if present (we'll create our own)
-            if [ "$name" = "index.html" ]; then continue; fi
+            [ "$name" = "index.html" ] && continue
             cp "$f" "$PUBLISH_DIR/$name"
           done
 
@@ -77,10 +77,12 @@ jobs:
           PUBLISH_DIR=publish
 
           # count DLLs in repo root
-          dll\_count=\$(shopt -s nullglob; files=(./*.dll); echo "\${#files[@]}")
-          diffs=\$(( dll\_count > 0 ? dll\_count - 1 : 0 ))
+          shopt -s nullglob
+          files=(./*.dll)
+          dll_count=${#files[@]}
+          diffs=$(( dll_count > 0 ? dll_count - 1 : 0 ))
 
-          cat > "$PUBLISH_DIR/index.html" <<'HTML'
+          cat > "$PUBLISH_DIR/index.html" <<HTML
           <!doctype html>
           <html>
             <head>
@@ -93,20 +95,21 @@ jobs:
               <br>
               <h2>Diffs</h2>
               <p>
-                Current assemblies: \${dll\_count}<br>
-                Current diffs: \${diffs}<br>
+                Current assemblies: ${dll_count}<br>
+                Current diffs: ${diffs}<br>
               </p>
               <br>
               <ul>
           HTML
 
+          # List other HTML files in publish dir (skip index.html)
           shopt -s nullglob
           for f in "$PUBLISH_DIR"/*.html; do
             name=$(basename "$f")
-            if [ "$name" = "index.html" ]; then continue; fi
-            bytes=\$(stat -c%s "\$f")
-            hr\_size=\$(numfmt --to=iec --format="%.1f" "\$bytes")
-            echo "                <li><a href=\"\$name\">\$name</a> — \$hr\_size</li>" >> "\$PUBLISH\_DIR/index.html"
+            [ "$name" = "index.html" ] && continue
+            bytes=$(stat -c%s "$f")
+            hr_size=$(numfmt --to=iec --format="%.1f" "$bytes")
+            echo "          <li><a href=\"$name\">$name</a> — $hr_size</li>" >> "$PUBLISH_DIR/index.html"
           done
 
           cat >> "$PUBLISH_DIR/index.html" <<'HTML'
