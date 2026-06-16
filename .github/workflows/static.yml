@@ -98,14 +98,20 @@ jobs:
             <body>
               <h1>Among Us Mono Assemblies</h1>
               <a href="https://github.com/astra1dev/AmongUsMonoAssemblies">GitHub Repository</a><br>
-              <br>
               <h2>Diffs</h2>
               <p>
                 Current assemblies: ${dll_count}<br>
                 Current diffs: ${diffs}<br>
               </p>
+              <p>
+                Powered by <a href="https://github.com/icsharpcode/ILSpy/tree/master/ICSharpCode.ILSpyCmd">ILSpyCmd</a> and <a href="https://diffoscope.org">Diffoscope</a>
+              </p>
               <br>
-              <ul>
+              <table>
+                <tr>
+                  <th>Link</th>
+                  <th>File Size</th>
+                </tr>
           HTML
 
           # List other HTML files in publish dir (skip index.html)
@@ -115,14 +121,38 @@ jobs:
             [ "$name" = "index.html" ] && continue
             bytes=$(stat -c%s "$f")
             hr_size=$(numfmt --to=iec --format="%.1f" "$bytes")
-            echo "          <li><a href=\"$name\">$name</a> — $hr_size</li>" >> "$PUBLISH_DIR/index.html"
+            echo "      <tr>" >> "$PUBLISH_DIR/index.html"
+            echo "        <td><a href=\"$name\">$name</a></td>" >> "$PUBLISH_DIR/index.html"
+            echo "        <td>$hr_size</td>" >> "$PUBLISH_DIR/index.html"
+            echo "      </tr>" >> "$PUBLISH_DIR/index.html"
           done
 
           cat >> "$PUBLISH_DIR/index.html" <<'HTML'
-              </ul>
+              </table>
             </body>
           </html>
           <style>
+
+          table, th, td {
+            border: 1px solid;
+          }
+
+          th, td {
+            padding: 8px;
+          }
+
+          table {
+            border-spacing: 2px;
+          }
+
+          /* "Animation" when hovering over links */
+          a {
+            text-decoration: none;
+          }
+
+          a:hover {
+            text-decoration: underline;
+          }
 
           /* Dark mode styles */
           @media (prefers-color-scheme: dark) {
@@ -133,12 +163,6 @@ jobs:
 
             a {
               color: #3498DB;
-              text-decoration: none;
-            }
-
-            /* "Animation" when hovering over links */
-            a:hover {
-              text-decoration: underline;
             }
           }
 
