@@ -69,12 +69,12 @@ jobs:
         run: |
           PUBLISH_DIR=publish
           mkdir -p "$PUBLISH_DIR"
-          # copy generated HTML files from repo root into publish dir
+          # copy generated HTML and MD files from repo root into publish dir
           shopt -s nullglob
-          for f in ./*.html; do
+          for f in ./*.html ./*.md; do
             name=$(basename "$f")
             # skip any repo-root index.html if present (we'll create our own)
-            [ "$name" = "index.html" ] && continue
+            [ "$name" = "index.html" ] || [ "$name" = "README.md" ] && continue
             cp "$f" "$PUBLISH_DIR/$name"
           done
 
