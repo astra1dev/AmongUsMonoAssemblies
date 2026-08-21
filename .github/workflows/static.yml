@@ -73,101 +73,13 @@ jobs:
           shopt -s nullglob
           for f in ./*.html ./*.md; do
             name=$(basename "$f")
-            # skip any repo-root index.html if present (we'll create our own)
-            [ "$name" = "index.html" ] || [ "$name" = "README.md" ] && continue
+            # [ "$name" = "README.md" ] && continue
             cp "$f" "$PUBLISH_DIR/$name"
           done
 
-      - name: Create index.html
+      - name: Update index.html
         run: |
-          PUBLISH_DIR=publish
-
-          # count DLLs in repo root
-          shopt -s nullglob
-          files=(./*.dll)
-          dll_count=${#files[@]}
-          diffs=$(( dll_count > 0 ? dll_count - 1 : 0 ))
-
-          cat > "$PUBLISH_DIR/index.html" <<HTML
-          <!doctype html>
-          <html>
-            <head>
-              <meta charset="utf-8"/>
-              <title>Among Us Mono Assemblies</title>
-            </head>
-            <body>
-              <h1>Among Us Mono Assemblies</h1>
-              <a href="https://github.com/astra1dev/AmongUsMonoAssemblies">GitHub Repository</a><br>
-              <h2>Diffs</h2>
-              <p>
-                Current assemblies: ${dll_count}<br>
-                Current diffs: ${diffs}<br>
-              </p>
-              <p>
-                Powered by <a href="https://github.com/icsharpcode/ILSpy/tree/master/ICSharpCode.ILSpyCmd">ILSpyCmd</a> and <a href="https://diffoscope.org">Diffoscope</a>
-              </p>
-              <br>
-              <table>
-                <tr>
-                  <th>Link</th>
-                  <th>File Size</th>
-                </tr>
-          HTML
-
-          # List other HTML files in publish dir (skip index.html)
-          shopt -s nullglob
-          for f in "$PUBLISH_DIR"/*.html; do
-            name=$(basename "$f")
-            [ "$name" = "index.html" ] && continue
-            bytes=$(stat -c%s "$f")
-            hr_size=$(numfmt --to=iec --format="%.1f" "$bytes")
-            echo "      <tr>" >> "$PUBLISH_DIR/index.html"
-            echo "        <td><a href=\"$name\">$name</a></td>" >> "$PUBLISH_DIR/index.html"
-            echo "        <td>$hr_size</td>" >> "$PUBLISH_DIR/index.html"
-            echo "      </tr>" >> "$PUBLISH_DIR/index.html"
-          done
-
-          cat >> "$PUBLISH_DIR/index.html" <<'HTML'
-              </table>
-            </body>
-          </html>
-          <style>
-
-          table, th, td {
-            border: 1px solid;
-          }
-
-          th, td {
-            padding: 8px;
-          }
-
-          table {
-            border-spacing: 2px;
-          }
-
-          /* "Animation" when hovering over links */
-          a {
-            text-decoration: none;
-          }
-
-          a:hover {
-            text-decoration: underline;
-          }
-
-          /* Dark mode styles */
-          @media (prefers-color-scheme: dark) {
-            body {
-              background-color: #121212;
-              color: #e0e0e0;
-            }
-
-            a {
-              color: #3498DB;
-            }
-          }
-
-          </style>
-          HTML
+          python update_index.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
